@@ -4,6 +4,7 @@ import { Geist } from "next/font/google"
 import { SubscriptionProvider } from "@/contexts/subscription-context"
 import { AuthProvider } from "@/contexts/auth-context"
 import { Footer } from "@/components/footer"
+import { SiteHeader } from "@/components/site-header"
 import { Toaster } from "sonner"
 import "./globals.css"
 
@@ -28,10 +29,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geist.className} antialiased flex flex-col min-h-screen`}>
+      <body className={`${geist.className} relative isolate antialiased flex flex-col min-h-screen`}>
         <AuthProvider>
           <SubscriptionProvider>
             <div className="flex-1 flex flex-col">
+              <SiteHeader />
               {children}
             </div>
             <Footer />

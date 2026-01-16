@@ -1,0 +1,142 @@
+"use client"
+
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { cn } from "@/lib/utils"
+import {
+    Camera,
+    Globe,
+    ChevronDown,
+    Play,
+    Video,
+    Image as ImageIcon,
+    Shirt,
+    Car,
+    UserRound,
+    Home,
+    Chrome,
+} from "lucide-react"
+
+const aiTools = [
+    { href: "/tools/video-generation", label: "Video Generation", icon: Video },
+    { href: "/tools/image-generator", label: "Image Generator", icon: ImageIcon },
+    { href: "/tools/ai-dress-changer", label: "AI Dress Changer", icon: Shirt },
+    { href: "/tools/ai-car-changer", label: "AI Car Changer", icon: Car },
+    { href: "/tools/ai-person-replacer", label: "AI Person Replacer", icon: UserRound },
+]
+
+export function SiteHeader() {
+    const pathname = usePathname()
+
+    const isHome = pathname === "/"
+    const isPricing = pathname === "/upgrade"
+    const isTools = pathname.startsWith("/tools")
+
+    return (
+        <header className="relative z-50">
+            <div className="bg-gray-400/20 backdrop-blur-xl supports-backdrop-filter:bg-black/15 border">
+                <div className="mx-auto flex w-full max-w-7xl items-center justify-between py-3 text-white">
+                    <Link href="/" className="flex items-center gap-3">
+                        <div className="grid h-8 w-8 place-items-center rounded-lg bg-white/10 ring-1 ring-white/15">
+                            <Camera className="h-4 w-4" />
+                        </div>
+                        <span className="text-xl font-semibold tracking-tight">Babičeva AI</span>
+                    </Link>
+
+                    <div className="flex items-center gap-4">
+                        <button
+                            type="button"
+                            className="inline-flex h-10 w-10 items-center justify-center rounded-xl hover:bg-white/15"
+                            aria-label="Change language"
+                        >
+                            <Globe className="h-5 w-5" />
+                        </button>
+
+                        <Button
+                            asChild
+                            className="h-10 rounded-xl bg-[#ffcc33] px-5 font-semibold text-black hover:bg-yellow-300"
+                        >
+                            <Link href="/auth/login">
+                                <Chrome className="w-4 h-4" />
+                                Sign in with Google</Link>
+                        </Button>
+                    </div>
+                </div>
+            </div>
+
+            <div className="mx-auto w-full max-w-7xl pb-5 pt-8 text-white ">
+                <nav className="relative p-1 rounded-xl bg-gray-400/20 backdrop-blur-xl supports-backdrop-filter:bg-black/15 border">
+                    <div className="grid grid-cols-3 items-center gap-1">
+                        <Link
+                            href="/"
+                            className={cn(
+                                "flex h-10 items-center justify-center gap-2 rounded-xl text-sm font-semibold",
+                                isHome
+                                    ? "bg-[#ffcc33] text-black"
+                                    : "text-white/90 hover:bg-white/10"
+                            )}
+                        >
+                            <Home className="w-4 h-4" />
+                            <span>Home</span>
+                        </Link>
+
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button
+                                    type="button"
+                                    className={cn(
+                                        "group flex h-10 items-center justify-center gap-2 rounded-xl text-sm font-semibold outline-none",
+                                        isTools
+                                            ? "bg-[#ffcc33] text-black"
+                                            : "text-white/90 hover:bg-white/10"
+                                    )}
+                                >
+                                    <Play className="h-4 w-4" />
+                                    <span>AI Tools</span>
+                                    <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
+                                </button>
+                            </DropdownMenuTrigger>
+
+                            <DropdownMenuContent align="center" className="w-65">
+                                {aiTools.map((tool) => (
+                                    <DropdownMenuItem key={tool.href} asChild>
+                                        <Link href={tool.href} className="cursor-pointer">
+                                            <tool.icon className="h-4 w-4" />
+                                            <span className="font-medium">{tool.label}</span>
+                                        </Link>
+                                    </DropdownMenuItem>
+                                ))}
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem asChild>
+                                    <Link href="/tools" className="cursor-pointer">
+                                        <span className="ml-7 text-white/80">View all tools</span>
+                                    </Link>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        <Link
+                            href="/upgrade"
+                            className={cn(
+                                "flex h-10 items-center justify-center rounded-xl text-sm font-semibold",
+                                isPricing
+                                    ? "bg-[#ffcc33] text-black"
+                                    : "text-white/90 hover:bg-white/10"
+                            )}
+                        >
+                            Pricing
+                        </Link>
+                    </div>
+                </nav>
+            </div>
+        </header>
+    )
+}
