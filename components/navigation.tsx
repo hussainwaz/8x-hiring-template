@@ -1,6 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { User, Menu, X, Sparkles } from "lucide-react"
@@ -41,7 +42,12 @@ export function Navigation() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="border-t border-border/50 px-6 py-4 space-y-4">
-            {!isLoading && (
+            {isLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-8 w-24" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ) : (
               <>
                 {user ? (
                   <>
@@ -99,15 +105,19 @@ export function Navigation() {
             </Link>
 
             <div className="flex items-center gap-6">
-              {!isLoading && (
+              {isLoading ? (
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-8 w-16" />
+                  <Skeleton className="h-8 w-20" />
+                </div>
+              ) : (
                 <>
                   {user ? (
                     <div className="flex items-center gap-4">
                       <Link
                         href="/profile"
-                        className={`transition-colors ${
-                          pathname === "/profile" ? "text-primary" : "text-foreground/80 hover:text-foreground"
-                        }`}
+                        className={`transition-colors ${pathname === "/profile" ? "text-primary" : "text-foreground/80 hover:text-foreground"
+                          }`}
                         title="Profile"
                       >
                         <User className="w-5 h-5" />

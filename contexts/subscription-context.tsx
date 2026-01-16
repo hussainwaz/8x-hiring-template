@@ -28,9 +28,9 @@ const SubscriptionContext = createContext<SubscriptionContextType>({
   isLoading: true,
   isPro: false,
   tier: "free",
-  upgradeToPro: async () => {},
-  downgradeToFree: async () => {},
-  refresh: async () => {},
+  upgradeToPro: async () => { },
+  downgradeToFree: async () => { },
+  refresh: async () => { },
 })
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
@@ -91,20 +91,46 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
   const upgradeToPro = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
-    const { error } = await supabase
-      .from("subscriptions")
-      .update({ tier: "pro" })
-      .eq("user_id", user.id)
-
-    if (error) {
-      console.error("[SubscriptionContext] Upgrade error:", error)
-      throw error
+    if (!user) {
+      throw new Error("User not authenticated")
     }
 
-    await refresh()
-  }, [refresh])
+    // First check if subscription exists
+    const { data: existing } = await supabase
+      .from("subscriptions")
+      .select("id")
+      .eq("user_id", user.id)
+      .single()
+
+    if (existing) {
+      // Update existing subscription
+      const { error } = await supabase
+        .from("subscriptions")
+        .update({ tier: "pro", updated_at: new Date().toISOString() })
+        .eq("user_id", user.id)
+
+      if (error) {
+        console.error("[SubscriptionContext] Upgrade error:", error)
+        throw error
+      }
+    } else {
+      // Create new subscription with pro tier
+      const { error } = await supabase
+        .from("subscriptions")
+        .insert({ user_id: user.id, tier: "pro" })
+
+      if (error) {
+        console.error("[SubscriptionContext] Insert error:", error)
+        throw error
+      }
+    }
+
+    // Update local state immediately for better UX
+    setSubscription(prev => prev ? { ...prev, tier: "pro" } : null)
+
+    // Then refresh in background
+    fetchSubscription()
+  }, [fetchSubscription])
 
   const downgradeToFree = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()

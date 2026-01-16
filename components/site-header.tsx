@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
@@ -11,6 +12,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
     Camera,
     Globe,
@@ -23,6 +25,8 @@ import {
     UserRound,
     Home,
     Chrome,
+    LogOut,
+    Loader2,
 } from "lucide-react"
 
 const aiTools = [
@@ -35,10 +39,25 @@ const aiTools = [
 
 export function SiteHeader() {
     const pathname = usePathname()
+    const router = useRouter()
+    const { user, isLoading, isSigningOut, signOut } = useAuth()
 
     const isHome = pathname === "/"
     const isPricing = pathname === "/upgrade"
     const isTools = pathname.startsWith("/tools")
+
+    const handleSignOut = async () => {
+        if (isSigningOut) return
+        try {
+            console.log('[SiteHeader] Signing out...')
+            await signOut()
+            console.log('[SiteHeader] Sign out successful, redirecting...')
+            router.push("/")
+            router.refresh()
+        } catch (error) {
+            console.error('[SiteHeader] Sign out error:', error)
+        }
+    }
 
     return (
         <header className="relative z-50">
@@ -60,14 +79,38 @@ export function SiteHeader() {
                             <Globe className="h-5 w-5" />
                         </button>
 
-                        <Button
-                            asChild
-                            className="h-10 rounded-xl bg-[#ffcc33] px-5 font-semibold text-black hover:bg-yellow-300"
-                        >
-                            <Link href="/auth/login">
-                                <Chrome className="w-4 h-4" />
-                                Sign in with Google</Link>
-                        </Button>
+                        {isLoading ? (
+                            <Skeleton className="h-10 w-28 rounded-xl bg-white/10" />
+                        ) : user ? (
+                            <Button
+                                type="button"
+                                onClick={handleSignOut}
+                                disabled={isSigningOut}
+                                className="h-10 rounded-xl bg-white/15 px-5 font-semibold text-white hover:bg-white/20 disabled:opacity-70"
+                            >
+                                {isSigningOut ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Signing out...
+                                    </>
+                                ) : (
+                                    <>
+                                        <LogOut className="w-4 h-4" />
+                                        Sign out
+                                    </>
+                                )}
+                            </Button>
+                        ) : (
+                            <Button
+                                asChild
+                                className="h-10 rounded-xl bg-[#ffcc33] px-5 font-semibold text-black hover:bg-yellow-300"
+                            >
+                                <Link href="/auth/login">
+                                    <Chrome className="w-4 h-4" />
+                                    Sign in with Google
+                                </Link>
+                            </Button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -92,6 +135,7 @@ export function SiteHeader() {
                             <DropdownMenuTrigger asChild>
                                 <button
                                     type="button"
+                                    suppressHydrationWarning
                                     className={cn(
                                         "group flex h-10 items-center justify-center gap-2 rounded-xl text-sm font-semibold outline-none",
                                         isTools
@@ -106,14 +150,21 @@ export function SiteHeader() {
                             </DropdownMenuTrigger>
 
                             <DropdownMenuContent align="center" className="w-65">
-                                {aiTools.map((tool) => (
-                                    <DropdownMenuItem key={tool.href} asChild>
-                                        <Link href={tool.href} className="cursor-pointer">
-                                            <tool.icon className="h-4 w-4" />
-                                            <span className="font-medium">{tool.label}</span>
-                                        </Link>
-                                    </DropdownMenuItem>
-                                ))}
+                                {aiTools.map((tool) => {
+                                    const isActive = pathname === tool.href
+                                    return (
+                                        <DropdownMenuItem
+                                            key={tool.href}
+                                            asChild
+                                            className={isActive ? "bg-[#ffcc33] text-black focus:bg-[#ffcc33] focus:text-black" : ""}
+                                        >
+                                            <Link href={tool.href} className="cursor-pointer">
+                                                <tool.icon className="h-4 w-4" />
+                                                <span className="font-medium">{tool.label}</span>
+                                            </Link>
+                                        </DropdownMenuItem>
+                                    )
+                                })}
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem asChild>
                                     <Link href="/tools" className="cursor-pointer">

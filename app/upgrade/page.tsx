@@ -1,8 +1,12 @@
 "use client"
 
 import { useAuth } from "@/contexts/auth-context"
+import { useSubscription } from "@/contexts/subscription-context"
+import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { CheckoutModal } from "@/components/checkout-modal"
+import { GradientBackground } from "@/components/gradient-background"
 import { cn } from "@/lib/utils"
 import { Crown, Star, Zap } from "lucide-react"
 
@@ -15,7 +19,21 @@ type Plan = {
   highlighted?: boolean
 }
 
-function PlanCard({ plan }: { plan: Plan }) {
+function PlanCard({
+  plan,
+  user,
+  tier,
+  isLoading,
+  onSubscribe
+}: {
+  plan: Plan
+  user: any
+  tier: string
+  isLoading: boolean
+  onSubscribe: (plan: Plan) => void
+}) {
+  const isCurrentPlan = user && tier === 'pro' && plan.name === 'Pro'
+
   return (
     <div
       className={cn(
@@ -52,18 +70,35 @@ function PlanCard({ plan }: { plan: Plan }) {
       </div>
 
       <div className="mt-6">
-        <Button
-          asChild
-          className="h-10 w-full rounded-xl bg-[#8a6f1b] px-6 font-semibold text-black hover:bg-[#9a7a22]"
-        >
-          <Link href="/auth/login?returnUrl=/upgrade">Sign in to subscribe</Link>
-        </Button>
+        {!user ? (
+          <Button
+            asChild
+            className="h-10 w-full rounded-xl bg-[#8a6f1b] px-6 font-semibold text-black hover:bg-[#9a7a22]"
+          >
+            <Link href="/auth/login?returnUrl=/upgrade">Sign in to subscribe</Link>
+          </Button>
+        ) : isCurrentPlan ? (
+          <Button
+            disabled
+            className="h-10 w-full rounded-xl bg-white/10 px-6 font-semibold text-white/50"
+          >
+            Current Plan
+          </Button>
+        ) : (
+          <Button
+            onClick={() => onSubscribe(plan)}
+            disabled={isLoading || plan.name !== 'Pro'}
+            className="h-10 w-full rounded-xl bg-[#8a6f1b] px-6 font-semibold text-black hover:bg-[#9a7a22] disabled:opacity-50"
+          >
+            {plan.name === 'Pro' ? 'Subscribe' : 'Coming Soon'}
+          </Button>
+        )}
       </div>
     </div>
   )
 }
 
-function TopUpCard({ plan }: { plan: Plan }) {
+function TopUpCard({ plan, user }: { plan: Plan; user: any }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-black/35 px-7 py-7 shadow-xl backdrop-blur-xl">
       <div className="text-center">
@@ -84,12 +119,24 @@ function TopUpCard({ plan }: { plan: Plan }) {
       </div>
 
       <div className="mt-6">
-        <Button
-          asChild
-          className="h-10 w-full rounded-xl bg-white/15 px-6 font-semibold text-white/70 hover:bg-white/20"
-        >
-          <Link href="/auth/login?returnUrl=/upgrade">Sign in to purchase</Link>
-        </Button>
+        {user ? (
+          <Button
+            className="h-10 w-full rounded-xl bg-white/15 px-6 font-semibold text-white/70 hover:bg-white/20"
+            onClick={() => {
+              // TODO: Implement actual purchase logic
+              console.log('Purchase:', plan.name)
+            }}
+          >
+            Purchase Now
+          </Button>
+        ) : (
+          <Button
+            asChild
+            className="h-10 w-full rounded-xl bg-white/15 px-6 font-semibold text-white/70 hover:bg-white/20"
+          >
+            <Link href="/auth/login?returnUrl=/upgrade">Sign in to purchase</Link>
+          </Button>
+        )}
       </div>
     </div>
   )
@@ -97,6 +144,19 @@ function TopUpCard({ plan }: { plan: Plan }) {
 
 export default function UpgradePage() {
   const { user } = useAuth()
+  const { tier, isLoading: subLoading, upgradeToPro } = useSubscription()
+  const [checkoutModal, setCheckoutModal] = useState<{ isOpen: boolean; plan: Plan | null }>({
+    isOpen: false,
+    plan: null,
+  })
+
+  const handleSubscribe = (plan: Plan) => {
+    setCheckoutModal({ isOpen: true, plan })
+  }
+
+  const handleCheckoutSuccess = async () => {
+    await upgradeToPro()
+  }
 
   const subscriptionPlans: Plan[] = [
     {
@@ -171,12 +231,7 @@ export default function UpgradePage() {
 
   return (
     <div className="relative min-h-screen text-white">
-      <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-black" />
-        <div className="absolute -left-40 -top-40 h-130 w-130 rounded-full bg-[radial-gradient(circle,rgba(255,153,0,0.35)_0%,rgba(255,153,0,0.0)_65%)] blur-3xl" />
-        <div className="absolute -bottom-56 -right-35 h-170 w-170 rounded-full bg-[radial-gradient(circle,rgba(168,85,247,0.30)_0%,rgba(168,85,247,0.0)_62%)] blur-3xl" />
-        <div className="absolute inset-0 bg-linear-to-b from-black/70 via-black/35 to-black/75" />
-      </div>
+      <GradientBackground />
 
       <main className="mx-auto w-full max-w-7xl px-6 py-6  pb-24">
         <section className="text-center">
@@ -190,7 +245,14 @@ export default function UpgradePage() {
 
         <section className="mt-10 grid gap-6 md:grid-cols-3">
           {subscriptionPlans.map((plan) => (
-            <PlanCard key={plan.name} plan={plan} />
+            <PlanCard
+              key={plan.name}
+              plan={plan}
+              user={user}
+              tier={tier}
+              isLoading={subLoading}
+              onSubscribe={handleSubscribe}
+            />
           ))}
         </section>
 
@@ -205,10 +267,20 @@ export default function UpgradePage() {
 
         <section className="mt-10 grid gap-6 md:grid-cols-3">
           {topUps.map((plan) => (
-            <TopUpCard key={plan.name} plan={plan} />
+            <TopUpCard key={plan.name} plan={plan} user={user} />
           ))}
         </section>
       </main>
+
+      {checkoutModal.plan && (
+        <CheckoutModal
+          isOpen={checkoutModal.isOpen}
+          onClose={() => setCheckoutModal({ isOpen: false, plan: null })}
+          onSuccess={handleCheckoutSuccess}
+          planName={checkoutModal.plan.name}
+          price={checkoutModal.plan.price}
+        />
+      )}
     </div>
   )
 }

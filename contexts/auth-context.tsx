@@ -7,18 +7,21 @@ import type { User } from "@supabase/supabase-js"
 type AuthContextType = {
   user: User | null
   isLoading: boolean
+  isSigningOut: boolean
   signOut: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoading: true,
-  signOut: async () => {},
+  isSigningOut: false,
+  signOut: async () => { },
 })
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isSigningOut, setIsSigningOut] = useState(false)
 
   useEffect(() => {
     // Safety timeout - ensure loading state doesn't hang forever
@@ -84,15 +87,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signOut = useCallback(async () => {
-    const { error } = await supabase.auth.signOut()
-    if (error) {
+    setIsSigningOut(true)
+    try {
+      // First sign out on server side to clear cookies
+      await fetch("/api/auth/signout", { method: "POST", redirect: "manual" })
+      // Then sign out on client side
+      const { error } = await supabase.auth.signOut()
+      if (error) {
+        console.error("Sign out error:", error)
+      }
+    } catch (error) {
       console.error("Sign out error:", error)
+    } finally {
+      setUser(null)
+      setIsSigningOut(false)
     }
-    setUser(null)
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, signOut }}>
+    <AuthContext.Provider value={{ user, isLoading, isSigningOut, signOut }}>
       {children}
     </AuthContext.Provider>
   )

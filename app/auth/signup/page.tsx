@@ -10,6 +10,8 @@ import { Navigation } from "@/components/navigation"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
+import { GradientBackground } from "@/components/gradient-background"
+import { Loader2 } from "lucide-react"
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("")
@@ -54,7 +56,7 @@ export default function SignUpPage() {
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -63,23 +65,32 @@ export default function SignUpPage() {
       })
       if (error) throw error
 
+      // Wait a bit for auth state to update before redirecting
+      await new Promise(resolve => setTimeout(resolve, 500))
+
       // Redirect to returnUrl if provided, otherwise to home
-      if (returnUrl) {
-        router.push(returnUrl)
-      } else {
-        router.push("/")
-      }
+      const destination = returnUrl || "/"
+      router.push(destination)
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred")
-    } finally {
       setIsLoading(false)
     }
   }
 
+  // Show loading spinner while auth is loading to prevent flicker
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <GradientBackground />
+        <Loader2 className="w-8 h-8 animate-spin text-[#ffcc33]" />
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <div className="flex min-h-[calc(100vh-80px)] items-center justify-center px-4">
+    <div className="min-h-screen">
+      <GradientBackground />
+      <div className="flex min-h-[70vh] items-center justify-center px-4">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
             <h1 className="text-4xl font-bold text-foreground">Create account</h1>
@@ -131,15 +142,22 @@ export default function SignUpPage() {
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Creating account..." : "Create Account"}
+            <Button type="submit" className="w-full bg-[#ffcc33] text-black font-medium hover:bg-[#ffcc33]/90" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Creating account...
+                </>
+              ) : (
+                "Create Account"
+              )}
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">
               Already have an account?{" "}
               <Link
                 href={returnUrl ? `/auth/login?returnUrl=${encodeURIComponent(returnUrl)}` : "/auth/login"}
-                className="text-primary hover:underline"
+                className="text-[#c69f2b] hover:underline"
               >
                 Sign in
               </Link>

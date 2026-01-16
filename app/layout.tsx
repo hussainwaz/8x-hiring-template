@@ -1,6 +1,5 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Geist } from "next/font/google"
 import { SubscriptionProvider } from "@/contexts/subscription-context"
 import { AuthProvider } from "@/contexts/auth-context"
 import { Footer } from "@/components/footer"
@@ -8,11 +7,9 @@ import { SiteHeader } from "@/components/site-header"
 import { Toaster } from "sonner"
 import "./globals.css"
 
-const geist = Geist({ subsets: ["latin"] })
-
 export const metadata: Metadata = {
-  title: "8x Hiring Template",
-  description: "A SaaS starter template for frontend engineering assessments.",
+  title: "Babičeva AI - AI Video & Image Generation",
+  description: "Create stunning videos and images with AI-powered tools.",
   icons: {
     icon: [
       { url: "/favicon-32x32.png" },
@@ -29,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geist.className} relative isolate antialiased flex flex-col min-h-screen`}>
+      <body className="font-sans relative isolate antialiased flex flex-col min-h-screen">
         <AuthProvider>
           <SubscriptionProvider>
             <div className="flex-1 flex flex-col">

@@ -14,7 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { CreditCard, LogOut, Trash2, Sparkles } from "lucide-react"
+import { CreditCard, LogOut, Trash2, Sparkles, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
 import { useSubscription } from "@/contexts/subscription-context"
@@ -88,8 +88,6 @@ export function ProfileClient({ user }: ProfileClientProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation />
-
       <div className="container mx-auto px-6 py-12">
         <div className="max-w-2xl mx-auto space-y-8">
           {/* Profile Header */}
@@ -176,7 +174,11 @@ export function ProfileClient({ user }: ProfileClientProps) {
                 onClick={handleLogout}
                 disabled={isLoggingOut}
               >
-                <LogOut className="w-4 h-4 mr-3" />
+                {isLoggingOut ? (
+                  <Loader2 className="w-4 h-4 mr-3 animate-spin" />
+                ) : (
+                  <LogOut className="w-4 h-4 mr-3" />
+                )}
                 {isLoggingOut ? "Signing out..." : "Sign Out"}
               </Button>
 

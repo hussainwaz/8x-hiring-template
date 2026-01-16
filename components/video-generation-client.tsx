@@ -3,10 +3,12 @@
 import type { ReactNode } from "react"
 import { useMemo, useRef, useState } from "react"
 import Link from "next/link"
+import { useAuth } from "@/contexts/auth-context"
+import { useSubscription } from "@/contexts/subscription-context"
 import { Button } from "@/components/ui/button"
 import { ToggleSwitch } from "@/components/ui/toggle-switch"
 import { cn } from "@/lib/utils"
-import { Globe, Play, Upload, Video } from "lucide-react"
+import { Globe, Play, Upload, Video, Loader2, AlertCircle, Crown, CheckCircle2, Sparkles } from "lucide-react"
 
 type Model = "veo" | "sora"
 
@@ -78,14 +80,27 @@ function SelectButton({
 }
 
 export function VideoGenerationClient() {
+    const { user } = useAuth()
+    const { tier, isPro, isLoading: subLoading } = useSubscription()
     const [model, setModel] = useState<Model>("sora")
     const [ratio, setRatio] = useState<AspectRatio>("16:9")
     const [removeWatermark, setRemoveWatermark] = useState(true)
     const [generateFromImages, setGenerateFromImages] = useState(false)
     const [selectedIds, setSelectedIds] = useState<string[]>(["ricky", "justine"])
     const [promptBody, setPromptBody] = useState("")
+    const [isGenerating, setIsGenerating] = useState(false)
+    const [error, setError] = useState<string | null>(null)
     const fileInputRef = useRef<HTMLInputElement | null>(null)
     const [selectedImages, setSelectedImages] = useState<File[]>([])
+
+    // State for generated video result (separate from example)
+    const [generatedVideo, setGeneratedVideo] = useState<{
+        url: string
+        prompt: string
+        model: string
+        aspectRatio: string
+    } | null>(null)
+    const [showSuccess, setShowSuccess] = useState(false)
 
     const selectedPeople = useMemo(
         () => people.filter((p) => selectedIds.includes(p.id)),
@@ -97,10 +112,12 @@ export function VideoGenerationClient() {
         [selectedPeople]
     )
 
-    const previewLabel = useMemo(
-        () => (model === "sora" ? "Sora 2 Example" : "Veo 3.1 Example"),
-        [model]
-    )
+    const previewLabel = useMemo(() => {
+        if (generatedVideo) {
+            return generatedVideo.model === "sora" ? "Sora 2" : "Veo 3.1"
+        }
+        return model === "sora" ? "Sora 2 Example" : "Veo 3.1 Example"
+    }, [model, generatedVideo])
 
     function togglePerson(id: string) {
         setSelectedIds((prev) => {
@@ -115,6 +132,67 @@ export function VideoGenerationClient() {
         if (!files) return
         const next = Array.from(files)
         setSelectedImages(next)
+    }
+
+    const handleGenerate = async () => {
+        setError(null)
+
+        // Validate prompt
+        const fullPrompt = `${mentionLine} ${promptBody}`.trim()
+
+        if (!promptBody.trim()) {
+            setError("Please enter a prompt to describe your video")
+            return
+        }
+
+        if (promptBody.trim().length < 10) {
+            setError("Prompt must be at least 10 characters long")
+            return
+        }
+
+        setIsGenerating(true)
+
+        try {
+            const response = await fetch("/api/generate-video", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    prompt: fullPrompt,
+                    model,
+                    aspectRatio: ratio,
+                    removeWatermark: isPro && removeWatermark,
+                    generateFromImages,
+                    selectedPeople: selectedPeople.map(p => p.name),
+                    images: selectedImages.length,
+                }),
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to generate video")
+            }
+
+            // Set the generated video result
+            setGeneratedVideo({
+                url: data.video.url,
+                prompt: data.video.prompt,
+                model: data.video.model,
+                aspectRatio: data.video.aspectRatio,
+            })
+
+            // Show success notification
+            setShowSuccess(true)
+            setTimeout(() => setShowSuccess(false), 5000)
+
+            setError(null)
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to generate video")
+        } finally {
+            setIsGenerating(false)
+        }
     }
 
     return (
@@ -169,6 +247,22 @@ export function VideoGenerationClient() {
                             checked={removeWatermark}
                             onCheckedChange={setRemoveWatermark}
                         />
+                        {user && !isPro && removeWatermark && (
+                            <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/10 px-4 py-3">
+                                <div className="flex items-start gap-3">
+                                    <AlertCircle className="h-5 w-5 shrink-0 text-yellow-500" />
+                                    <div className="text-sm">
+                                        <div className="font-semibold text-yellow-500">Pro Feature</div>
+                                        <div className="mt-1 text-white/70">
+                                            Watermark removal is only available for Pro users.
+                                            <Link href="/upgrade" className="ml-1 font-semibold text-[#ffcc33] hover:underline">
+                                                Upgrade now
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                         <ToggleSwitch
                             label="Generate from Images"
                             checked={generateFromImages}
@@ -281,25 +375,110 @@ export function VideoGenerationClient() {
                     </div>
 
                     <div className="mt-8">
-                        <Button
-                            asChild
-                            className="h-12 w-full rounded-xl bg-[#ffcc33] text-base font-semibold text-black hover:bg-yellow-300"
-                        >
-                            <Link href="/auth/login?returnUrl=/tools/video-generation">
-                                <Globe className="h-4 w-4" />
-                                Sign in to generate
-                            </Link>
-                        </Button>
+                        {!user ? (
+                            <Button
+                                asChild
+                                className="h-12 w-full rounded-xl bg-[#ffcc33] text-base font-semibold text-black hover:bg-yellow-300"
+                            >
+                                <Link href="/auth/login?returnUrl=/tools/video-generation">
+                                    <Globe className="h-4 w-4" />
+                                    Sign in to generate
+                                </Link>
+                            </Button>
+                        ) : (
+                            <>
+                                {error && (
+                                    <div className="mb-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3">
+                                        <div className="flex items-start gap-3">
+                                            <AlertCircle className="h-5 w-5 shrink-0 text-red-500" />
+                                            <div className="text-sm text-red-500">{error}</div>
+                                        </div>
+                                    </div>
+                                )}
+                                <Button
+                                    className="h-12 w-full rounded-xl bg-[#ffcc33] text-base font-semibold text-black hover:bg-yellow-300 disabled:opacity-50"
+                                    disabled={isGenerating || subLoading}
+                                    onClick={handleGenerate}
+                                >
+                                    {isGenerating ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            Generating...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Play className="h-4 w-4" />
+                                            Generate Video{!isPro && removeWatermark ? ' (with watermark)' : ''}
+                                        </>
+                                    )}
+                                </Button>
+                            </>
+                        )}
+
+                        {user && !isPro && (
+                            <div className="mt-4 rounded-xl border border-[#ffcc33]/20 bg-[#ffcc33]/10 p-4">
+                                <div className="flex items-start gap-3">
+                                    <Crown className="h-5 w-5 shrink-0 text-[#ffcc33]" />
+                                    <div className="text-sm">
+                                        <div className="font-semibold text-[#ffcc33]">Upgrade to Pro</div>
+                                        <div className="mt-1 text-white/70">
+                                            Get watermark-free videos, priority processing, and unlimited generations.
+                                        </div>
+                                        <Button
+                                            asChild
+                                            className="mt-3 h-9 rounded-lg bg-[#ffcc33] text-sm font-semibold text-black hover:bg-yellow-300"
+                                        >
+                                            <Link href="/upgrade">
+                                                View Plans
+                                            </Link>
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
                 <div className="rounded-2xl border border-white/10 bg-black/35 p-6 shadow-xl backdrop-blur-xl">
-                    <div className="text-lg font-semibold">Preview</div>
+                    <div className="flex items-center justify-between">
+                        <div className="text-lg font-semibold">Preview</div>
+                        {showSuccess && (
+                            <div className="flex items-center gap-2 rounded-full bg-green-500/20 px-3 py-1 text-xs font-semibold text-green-400">
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                Video generated!
+                            </div>
+                        )}
+                    </div>
 
                     <div
-                        className="mt-4 overflow-hidden rounded-xl bg-black"
+                        className="mt-4 overflow-hidden rounded-xl bg-black relative"
                         style={{ aspectRatio: "16 / 9" }}
                     >
+                        {/* Generating overlay */}
+                        {isGenerating && (
+                            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
+                                <div className="relative">
+                                    <div className="h-16 w-16 rounded-full border-4 border-[#ffcc33]/20" />
+                                    <div className="absolute inset-0 h-16 w-16 animate-spin rounded-full border-4 border-transparent border-t-[#ffcc33]" />
+                                    <Sparkles className="absolute inset-0 m-auto h-6 w-6 text-[#ffcc33] animate-pulse" />
+                                </div>
+                                <div className="mt-4 text-sm font-semibold text-white">Generating your video...</div>
+                                <div className="mt-2 text-xs text-white/60">This may take a few moments</div>
+                            </div>
+                        )}
+
+                        {/* Success overlay - shows briefly after generation */}
+                        {showSuccess && !isGenerating && (
+                            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                                <div className="flex flex-col items-center">
+                                    <div className="grid h-16 w-16 place-items-center rounded-full bg-green-500/20">
+                                        <CheckCircle2 className="h-8 w-8 text-green-400" />
+                                    </div>
+                                    <div className="mt-3 text-sm font-semibold text-white">Video Ready!</div>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="relative h-full w-full">
                             <div className="absolute right-4 top-4 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white/80">
                                 {previewLabel}
@@ -307,16 +486,19 @@ export function VideoGenerationClient() {
                             <div className="grid h-full w-full place-items-center bg-black">
                                 <div
                                     className={cn(
-                                        "h-full", "w-full"
+                                        "h-full",
+                                        (generatedVideo?.aspectRatio || ratio) === "16:9" ? "w-full" : "w-[56.25%]"
                                     )}
+                                    style={{ aspectRatio: (generatedVideo?.aspectRatio || ratio) === "16:9" ? "16 / 9" : "9 / 16" }}
                                 >
                                     <video
-                                        key={ratio}
-                                        className="h-full w-full"
+                                        key={generatedVideo?.url || ratio}
+                                        className="h-full w-full object-cover"
                                         src={
-                                            ratio === "16:9"
+                                            generatedVideo?.url ||
+                                            (ratio === "16:9"
                                                 ? "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
-                                                : "https://babiceva.ai/video-examples/sora2-example.mp4?v=1768570150847"
+                                                : "https://babiceva.ai/video-examples/sora2-example.mp4?v=1768570150847")
                                         }
                                         controls
                                         playsInline
@@ -329,15 +511,19 @@ export function VideoGenerationClient() {
                     <div className="mt-4 rounded-xl border border-white/10 bg-black/30 p-4">
                         <div className="text-xs font-semibold text-white/60">Prompt:</div>
                         <div className="mt-2 text-sm text-white/85">
-                            <span className="font-semibold text-white/80">{mentionLine || "@example"}</span>
-                            {promptBody
-                                ? ` ${promptBody}`
-                                : " is holding a mug and speaking in a short, clear sentence."}
+                            {generatedVideo ? (
+                                <span>{generatedVideo.prompt}</span>
+                            ) : (
+                                <>
+                                    <span className="font-semibold text-white/80">@example</span>
+                                    {" is holding a mug and speaking in a short, clear sentence."}
+                                </>
+                            )}
                         </div>
                     </div>
 
                     <div className="mt-2 text-xs text-white/45">
-                        Selected model: {model === "sora" ? "OpenAI Sora 2" : "Google Veo 3.1"}
+                        Selected model: {generatedVideo?.model || (model === "sora" ? "OpenAI Sora 2" : "Google Veo 3.1")}
                         {removeWatermark ? " • Remove watermark" : ""}
                         {generateFromImages ? " • From images" : ""}
                     </div>
