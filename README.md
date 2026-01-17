@@ -1,128 +1,91 @@
-# 8x Hiring Template
+# 8x Full-Stack Internship Assignment
 
-A modern SaaS starter template for frontend engineering assessments. Built with Next.js 16, React 19, TypeScript, Tailwind CSS, and Supabase.
+This project is a partial recreation of **babiceva.ai**, built on top of the provided 8x hiring template.  
+The goal was to build something similar to the **babiceva.ai** website, so I tried to copy the overall design and layout as much as possible within the given time.
 
-## Quick Start
-
-### Prerequisites
-
-- [Node.js](https://nodejs.org/) (v20+)
-- [pnpm](https://pnpm.io/) (or npm/yarn)
-- [Docker](https://www.docker.com/) (for local Supabase)
-- [Supabase CLI](https://supabase.com/docs/guides/cli)
-
-### Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone <repo-url>
-   cd 8x-hiring-template
-   ```
-
-2. **Install dependencies**
-   ```bash
-   pnpm install
-   ```
-
-3. **Start local Supabase**
-   ```bash
-   # If you have another Supabase project running, stop it first:
-   # supabase stop --project-id <other-project>
-
-   supabase start
-   ```
-
-   This will output your local credentials (note: this project uses custom ports):
-   ```
-   API URL: http://127.0.0.1:54521
-   Publishable key: sb_publishable_...
-   Secret key: sb_secret_...
-   ```
-
-   Migrations are applied automatically during startup.
-
-4. **Configure environment**
-   ```bash
-   cp .env.example .env.local
-   ```
-
-   Then edit `.env.local` with the keys from step 3:
-   ```
-   NEXT_PUBLIC_SUPABASE_URL="http://127.0.0.1:54521"
-   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="<your-publishable-key>"
-   SUPABASE_SERVICE_ROLE_KEY="<your-secret-key>"
-   ```
-
-5. **Start development server**
-   ```bash
-   pnpm dev
-   ```
-
-6. **Open** [http://localhost:3000](http://localhost:3000)
-
-## Tech Stack
-
-- **Framework**: Next.js 16 (App Router)
-- **Language**: TypeScript
-- **UI**: React 19 + Tailwind CSS + Shadcn/ui
-- **Database**: Supabase (PostgreSQL)
-- **Auth**: Supabase Auth (email/password)
-
-## Features
-
-- User authentication (sign up, sign in, sign out)
-- Protected routes
-- Subscription tiers (Free / Pro)
-- Profile management
-- Account deletion
-- Responsive design
-- Dark mode support
-
-## Project Structure
-
-```
-├── app/                    # Next.js App Router pages
-│   ├── api/               # API routes
-│   ├── auth/              # Auth pages (login, signup)
-│   ├── profile/           # User profile
-│   └── upgrade/           # Subscription upgrade flow
-├── components/            # Reusable UI components
-├── contexts/              # React Context providers
-├── lib/                   # Utilities and Supabase clients
-└── supabase/              # Database migrations
-```
-
-## Useful Commands
-
-```bash
-pnpm dev          # Start development server
-pnpm build        # Build for production
-pnpm lint         # Run ESLint
-supabase start    # Start local Supabase (applies migrations)
-supabase stop     # Stop local Supabase
-supabase studio   # Open Supabase Studio (local admin UI)
-```
-
-## Database Schema
-
-The template uses a simple `subscriptions` table:
-
-```sql
-CREATE TABLE subscriptions (
-  id UUID PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id),
-  tier TEXT CHECK (tier IN ('free', 'pro')),
-  created_at TIMESTAMP,
-  updated_at TIMESTAMP
-);
-```
-
-## Notes
-
-- **No real payments**: The upgrade flow is simulated (writes directly to database)
-- **Local auth**: Email verification is disabled in development mode
-- **Test accounts**: Use any email/password to sign up locally
 
 ---
 
-See [CANDIDATE_ASSIGNMENT.md](./CANDIDATE_ASSIGNMENT.md) for assessment instructions.
+## What I Built
+
+- **Homepage**
+  - Hero section with main CTA
+  - Video gallery
+  - Professional tips section
+
+- **AI Tool Pages**
+  - Video Generation page (main functional tool)
+  - Other AI tool pages implemented as UI only
+  - Form inputs (selectors, toggles, textarea)
+  - Mock AI generation with loading and result states
+
+- **Pricing & Subscription Flow**
+  - Free and Pro tiers
+  - Fake checkout UI
+  - User upgraded to `pro` on successful mock checkout
+  - UI and features gated based on subscription tier
+
+- **Auth-Aware UI States**
+  - Logged out → Logged in (Free) → Logged in (Pro)
+  - Clear CTAs depending on user state
+  - Disabled or gated actions where appropriate
+
+
+---
+
+## What I Reused From the Template
+
+The provided template already included a solid foundation, so I intentionally reused:
+
+- Supabase Auth setup (sign up, sign in, session handling)
+- Protected route utilities
+- Base layout and routing
+- Supabase local configuration and migrations
+
+Rather than rebuilding these parts, I focused on using them correctly and extending them where needed.
+
+---
+
+## Auth and Free / Pro Gating Logic
+
+The app supports three distinct user states:
+
+1. **Logged Out**
+   - Pages are accessible for exploration
+   - Generation actions prompt the user to sign in
+
+2. **Logged In (Free)**
+   - Access to tools with limited features
+   - Upgrade prompts shown for Pro-only functionality
+
+3. **Logged In (Pro)**
+   - Full access to all features
+   - Pro-only options unlocked
+
+Instead of hard-locking entire routes, feature access is gated at the action level, allowing exploration while enforcing authentication at execution time.
+
+---
+
+## Issues I Ran Into
+
+- **Docker Setup**
+  - Docker was not installed initially and had to be set up to run Supabase locally
+  - First-time image pulls took significant time
+
+- **Supabase Local Development**
+  - First experience running Supabase locally
+  - Required installing the Supabase CLI and configuring environment variables
+  - Minor issues during `supabase start` and `supabase db reset`, resolved by re-running and checking logs
+
+---
+
+## What I’d Improve With More Time
+
+- Integrate real AI generation APIs
+- Replace the fake checkout with Stripe / Stripe Connect
+- Improve caching and memoization for heavier UI sections
+- Add smoother transitions and micro-interactions
+- Enhance mobile responsiveness
+- Add more robust error boundaries and logging
+
+---
