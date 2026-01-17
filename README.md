@@ -81,11 +81,13 @@ Instead of hard-locking entire routes, feature access is gated at the action lev
 
 ## What I’d Improve With More Time
 
-- Integrate real AI generation APIs
-- Replace the fake checkout with Stripe / Stripe Connect
-- Improve caching and memoization for heavier UI sections
-- Add smoother transitions and micro-interactions
-- Enhance mobile responsiveness
-- Add more robust error boundaries and logging
+- Integrate real AI generation APIs instead of mock responses  
+- Complete all other AI tool pages beyond the video generation page  
+- Replace the fake checkout with Stripe / Stripe Connect  
+- Improve caching and memoization for better performance on heavier UI sections  
+- Add smoother transitions and micro-interactions  
+- Enhance mobile responsiveness  
+- Add more robust error handling and logging  
+- Implement a history feature to save generated videos and images
 
 ---

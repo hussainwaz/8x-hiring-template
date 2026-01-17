@@ -57,12 +57,12 @@ export function SiteHeader() {
     return (
         <header className="relative z-50">
             <div className="bg-gray-400/20 backdrop-blur-xl supports-backdrop-filter:bg-black/15 border">
-                <div className="mx-auto flex w-full max-w-7xl items-center justify-between py-3 text-white">
+                <div className="mx-auto flex w-full max-w-7xl px-3 md:px-6 xl:px-0 items-center justify-between py-3 text-white">
                     <Link href="/" className="flex items-center gap-3">
                         <div className="grid h-8 w-8 place-items-center rounded-lg bg-white/10 ring-1 ring-white/15">
                             <Camera className="h-4 w-4" />
                         </div>
-                        <span className="text-xl font-semibold tracking-tight">Babičeva AI</span>
+                        <span className="text-xl font-semibold tracking-tight hidden sm:block">Babičeva AI</span>
                     </Link>
 
                     <div className="flex items-center gap-4">
@@ -117,7 +117,7 @@ export function SiteHeader() {
                             >
                                 <Link href="/auth/login">
                                     <Chrome className="w-4 h-4" />
-                                    Sign in with Google
+                                    Sign in
                                 </Link>
                             </Button>
                         )}
@@ -125,7 +125,7 @@ export function SiteHeader() {
                 </div>
             </div>
 
-            <div className="mx-auto w-full max-w-7xl pb-5 pt-8 text-white ">
+            <div className="mx-auto w-full max-w-7xl pb-5 pt-8 text-white px-3 md:px-6 xl:px-0 ">
                 <nav className="relative p-1 rounded-xl bg-gray-400/20 backdrop-blur-xl supports-backdrop-filter:bg-black/15 border">
                     <div className="grid grid-cols-3 items-center gap-1">
                         <Link
@@ -154,7 +154,8 @@ export function SiteHeader() {
                                     )}
                                 >
                                     <Play className="h-4 w-4" />
-                                    <span>AI Tools</span>
+                                    <span className="hidden sm:inline">AI Tools</span>
+                                    <span className="inline sm:hidden">AI</span>
                                     <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
                                 </button>
                             </DropdownMenuTrigger>

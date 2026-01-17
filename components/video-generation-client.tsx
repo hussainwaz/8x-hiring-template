@@ -529,15 +529,6 @@ export function VideoGenerationClient() {
                     </div>
                 </div>
             </div>
-
-            <div className="mt-14">
-                <div className="mx-auto max-w-7xl rounded-2xl border border-white/10 bg-black/20 px-6 py-14 text-center shadow-xl backdrop-blur-xl">
-                    <div className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-white/5 ring-1 ring-white/10">
-                        <Video className="h-6 w-6 text-white/70" />
-                    </div>
-                    <div className="mt-4 text-sm text-white/65">Sign in to view your video history</div>
-                </div>
-            </div>
         </div>
     )
 }

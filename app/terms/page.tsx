@@ -1,11 +1,12 @@
 "use client"
 
+import { GradientBackground } from "@/components/gradient-background"
 import { Navigation } from "@/components/navigation"
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
+    <div className="min-h-screen">
+      <GradientBackground />
       <div className="container mx-auto px-6 py-16 max-w-4xl">
         {/* Header */}
         <div className="mb-12">
