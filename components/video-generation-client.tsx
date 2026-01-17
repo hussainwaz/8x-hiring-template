@@ -487,9 +487,7 @@ export function VideoGenerationClient() {
                                 <div
                                     className={cn(
                                         "h-full",
-                                        (generatedVideo?.aspectRatio || ratio) === "16:9" ? "w-full" : "w-[56.25%]"
                                     )}
-                                    style={{ aspectRatio: (generatedVideo?.aspectRatio || ratio) === "16:9" ? "16 / 9" : "9 / 16" }}
                                 >
                                     <video
                                         key={generatedVideo?.url || ratio}
