@@ -199,16 +199,18 @@ export function ProfileClient({ user }: ProfileClientProps) {
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>Delete Account?</AlertDialogTitle>
-                    <AlertDialogDescription className="space-y-2">
-                      <p>This action is permanent and cannot be undone.</p>
-                      <ul className="list-disc list-inside space-y-1 text-sm">
-                        <li>Your profile will be permanently deleted</li>
-                        <li>Your subscription data will be removed</li>
-                        <li>You won't be able to recover your account</li>
-                      </ul>
-                      <p className="font-semibold text-destructive pt-2">
-                        This action cannot be undone.
-                      </p>
+                    <AlertDialogDescription asChild>
+                      <div className="space-y-2 text-sm text-muted-foreground">
+                        <p>This action is permanent and cannot be undone.</p>
+                        <ul className="list-disc list-inside space-y-1">
+                          <li>Your profile will be permanently deleted</li>
+                          <li>Your subscription data will be removed</li>
+                          <li>You won&apos;t be able to recover your account</li>
+                        </ul>
+                        <p className="font-semibold text-destructive pt-2">
+                          This action cannot be undone.
+                        </p>
+                      </div>
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
