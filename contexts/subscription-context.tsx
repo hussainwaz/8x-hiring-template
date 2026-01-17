@@ -55,8 +55,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         .single()
 
       if (error && error.code !== "PGRST116") {
-        // PGRST116 = no rows returned (user doesn't have subscription yet)
-        console.error("[SubscriptionContext] Fetch error:", error)
+        // PGRST116 = no rows returned
       }
 
       if (data) {
@@ -70,15 +69,14 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
           .single()
 
         if (insertError) {
-          console.error("[SubscriptionContext] Insert error:", insertError)
+          // Failed to create subscription
         } else {
           setSubscription(newSub as Subscription)
         }
       }
 
       setIsLoading(false)
-    } catch (error) {
-      console.error("[SubscriptionContext] Fetch error:", error)
+    } catch {
       setSubscription(null)
       setIsLoading(false)
     }
@@ -110,7 +108,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         .eq("user_id", user.id)
 
       if (error) {
-        console.error("[SubscriptionContext] Upgrade error:", error)
         throw error
       }
     } else {
@@ -120,7 +117,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         .insert({ user_id: user.id, tier: "pro" })
 
       if (error) {
-        console.error("[SubscriptionContext] Insert error:", error)
         throw error
       }
     }
@@ -138,16 +134,16 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
     const { error } = await supabase
       .from("subscriptions")
-      .update({ tier: "free" })
+      .update({ tier: "free", updated_at: new Date().toISOString() })
       .eq("user_id", user.id)
 
     if (error) {
-      console.error("[SubscriptionContext] Downgrade error:", error)
       throw error
     }
 
-    await refresh()
-  }, [refresh])
+    // Update local state immediately for better UX
+    setSubscription(prev => prev ? { ...prev, tier: "free" } : null)
+  }, [])
 
   useEffect(() => {
     fetchSubscription()

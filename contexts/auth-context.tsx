@@ -24,46 +24,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isSigningOut, setIsSigningOut] = useState(false)
 
   useEffect(() => {
-    // Safety timeout - ensure loading state doesn't hang forever
     const timeout = setTimeout(() => {
-      console.warn('[AuthContext] Loading timeout - forcing isLoading to false')
       setIsLoading(false)
-    }, 10000) // 10 second timeout
+    }, 5000)
 
-    // Get initial user
     const init = async () => {
       try {
-        console.log('[AuthContext] Initializing...')
-
-        // First check if there's a session (won't throw if no session exists)
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
 
         if (sessionError) {
-          console.error('[AuthContext] Error getting session:', sessionError)
           setUser(null)
           setIsLoading(false)
           return
         }
 
-        // Only try to get user if we have a session
         if (session) {
           const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-          if (userError) {
-            console.error('[AuthContext] Error getting user:', userError)
-            setUser(null)
-          } else {
-            console.log('[AuthContext] User:', user ? user.id : 'none')
-            setUser(user)
-          }
+          setUser(userError ? null : user)
         } else {
-          console.log('[AuthContext] No session found')
           setUser(null)
         }
 
         setIsLoading(false)
-      } catch (error) {
-        console.error('[AuthContext] Init error:', error)
+      } catch {
         setUser(null)
         setIsLoading(false)
       }
@@ -71,11 +54,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     init()
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log('[AuthContext] Auth state changed:', session?.user ? session.user.id : 'logged out')
       setUser(session?.user ?? null)
       setIsLoading(false)
     })
@@ -88,19 +69,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     setIsSigningOut(true)
+    // Clear user immediately for instant UI feedback
+    setUser(null)
+    setIsSigningOut(false)
+
+    // Then do cleanup in background
     try {
-      // First sign out on server side to clear cookies
-      await fetch("/api/auth/signout", { method: "POST", redirect: "manual" })
-      // Then sign out on client side
-      const { error } = await supabase.auth.signOut()
-      if (error) {
-        console.error("Sign out error:", error)
-      }
-    } catch (error) {
-      console.error("Sign out error:", error)
-    } finally {
-      setUser(null)
-      setIsSigningOut(false)
+      await fetch("/api/auth/signout", { method: "POST" })
+    } catch {
+      // Ignore
+    }
+    try {
+      await supabase.auth.signOut()
+    } catch {
+      // Ignore
     }
   }, [])
 

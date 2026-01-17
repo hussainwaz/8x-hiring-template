@@ -84,8 +84,7 @@ export async function POST(request: NextRequest) {
             }
         })
 
-    } catch (error) {
-        console.error("[Video Generation API] Error:", error)
+    } catch {
         return NextResponse.json(
             { error: "Failed to generate video. Please try again." },
             { status: 500 }

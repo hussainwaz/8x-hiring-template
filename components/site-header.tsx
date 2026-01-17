@@ -27,6 +27,7 @@ import {
     Chrome,
     LogOut,
     Loader2,
+    User,
 } from "lucide-react"
 
 const aiTools = [
@@ -46,17 +47,11 @@ export function SiteHeader() {
     const isPricing = pathname === "/upgrade"
     const isTools = pathname.startsWith("/tools")
 
-    const handleSignOut = async () => {
+    const handleSignOut = () => {
         if (isSigningOut) return
-        try {
-            console.log('[SiteHeader] Signing out...')
-            await signOut()
-            console.log('[SiteHeader] Sign out successful, redirecting...')
-            router.push("/")
-            router.refresh()
-        } catch (error) {
-            console.error('[SiteHeader] Sign out error:', error)
-        }
+        signOut()
+        router.push("/")
+        router.refresh()
     }
 
     return (
@@ -82,24 +77,39 @@ export function SiteHeader() {
                         {isLoading ? (
                             <Skeleton className="h-10 w-28 rounded-xl bg-white/10" />
                         ) : user ? (
-                            <Button
-                                type="button"
-                                onClick={handleSignOut}
-                                disabled={isSigningOut}
-                                className="h-10 rounded-xl bg-white/15 px-5 font-semibold text-white hover:bg-white/20 disabled:opacity-70"
-                            >
-                                {isSigningOut ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        Signing out...
-                                    </>
-                                ) : (
-                                    <>
-                                        <LogOut className="w-4 h-4" />
-                                        Sign out
-                                    </>
-                                )}
-                            </Button>
+                            <div className="flex items-center gap-3">
+                                {/* Profile Avatar */}
+                                <Link
+                                    href="/profile"
+                                    className={cn(
+                                        "flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all",
+                                        pathname === "/profile"
+                                            ? "border-[#ffcc33] bg-[#ffcc33]/20 text-[#ffcc33]"
+                                            : "border-white/20 bg-white/5 text-white/80 hover:border-[#ffcc33]/50 hover:bg-[#ffcc33]/10 hover:text-white"
+                                    )}
+                                    title="Profile"
+                                >
+                                    <User className="w-5 h-5" />
+                                </Link>
+                                <Button
+                                    type="button"
+                                    onClick={handleSignOut}
+                                    disabled={isSigningOut}
+                                    className="h-10 rounded-xl bg-white/15 px-5 font-semibold text-white hover:bg-white/20 disabled:opacity-70"
+                                >
+                                    {isSigningOut ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            Signing out...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <LogOut className="w-4 h-4" />
+                                            Sign out
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
                         ) : (
                             <Button
                                 asChild

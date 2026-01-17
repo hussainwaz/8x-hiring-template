@@ -18,7 +18,7 @@ export function Navigation() {
   return (
     <>
       {/* Mobile Navigation */}
-      <nav className="md:hidden border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full">
+      <nav className="md:hidden border-b border-border/50 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50 w-full">
         <div className="container mx-auto px-6 py-5">
           <div className="flex items-center justify-between">
             <Link
@@ -53,10 +53,13 @@ export function Navigation() {
                   <>
                     <Link
                       href="/profile"
-                      className="block py-2"
+                      className="flex items-center gap-3 py-2"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      Profile
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-white/20 bg-white/5">
+                        <User className="w-4 h-4" />
+                      </div>
+                      <span>Profile</span>
                     </Link>
                     {!isPro && (
                       <Link
@@ -91,7 +94,7 @@ export function Navigation() {
       </nav>
 
       {/* Desktop Navigation */}
-      <nav className="hidden md:block border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+      <nav className="hidden md:block border-b border-border/50 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 sticky top-0 z-50">
         <div className="container mx-auto px-6 py-5">
           <div className="flex items-center justify-between">
             <Link
@@ -116,11 +119,13 @@ export function Navigation() {
                     <div className="flex items-center gap-4">
                       <Link
                         href="/profile"
-                        className={`transition-colors ${pathname === "/profile" ? "text-primary" : "text-foreground/80 hover:text-foreground"
+                        className={`flex items-center justify-center w-9 h-9 rounded-full border-2 transition-all ${pathname === "/profile"
+                          ? "border-primary bg-primary/20 text-primary"
+                          : "border-white/20 bg-white/5 text-white/80 hover:border-primary/50 hover:bg-primary/10 hover:text-white"
                           }`}
                         title="Profile"
                       >
-                        <User className="w-5 h-5" />
+                        <User className="w-4 h-4" />
                       </Link>
                       {!isPro && (
                         <Link href="/upgrade">

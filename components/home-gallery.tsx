@@ -1,4 +1,7 @@
+"use client"
+
 import { cn } from "@/lib/utils"
+import { useState, useRef, useEffect } from "react"
 
 type GalleryItem = {
     src: string
@@ -36,6 +39,46 @@ const items: GalleryItem[] = [
     },
 ]
 
+function LazyVideo({ src }: { src: string }) {
+    const [isVisible, setIsVisible] = useState(false)
+    const containerRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setIsVisible(true)
+                    observer.disconnect()
+                }
+            },
+            { rootMargin: "100px" }
+        )
+
+        if (containerRef.current) {
+            observer.observe(containerRef.current)
+        }
+
+        return () => observer.disconnect()
+    }, [])
+
+    return (
+        <div ref={containerRef} className="h-full w-full">
+            {isVisible ? (
+                <video
+                    className="h-full w-full object-cover"
+                    src={src}
+                    muted
+                    loop
+                    playsInline
+                    autoPlay
+                />
+            ) : (
+                <div className="h-full w-full bg-white/5 animate-pulse" />
+            )}
+        </div>
+    )
+}
+
 export function HomeGallery({ className }: { className?: string }) {
     return (
         <div className={cn("mx-auto w-full max-w-6xl px-6", className)}>
@@ -49,14 +92,7 @@ export function HomeGallery({ className }: { className?: string }) {
                             item.className
                         )}
                     >
-                        <video
-                            className="h-full w-full object-cover"
-                            src={item.src}
-                            muted
-                            loop
-                            playsInline
-                            autoPlay
-                        />
+                        <LazyVideo src={item.src} />
                     </div>
                 ))}
             </div>

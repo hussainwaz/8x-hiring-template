@@ -1,10 +1,15 @@
+"use client"
+
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { HomeGallery } from "@/components/home-gallery"
 import { ProfessionalTips } from "@/components/professional-tips"
 import { Brain, Sparkles } from "lucide-react"
+import { useAuth } from "@/contexts/auth-context"
 
 export default function HomePage() {
+  const { user } = useAuth()
+
   return (
     <div className="relative min-h-screen text-white">
       <div className="fixed inset-0 -z-10">
@@ -44,7 +49,7 @@ export default function HomePage() {
               asChild
               className="h-11 rounded-full bg-[#ffcc33] px-9 text-base font-semibold text-black hover:bg-yellow-300"
             >
-              <Link href="/auth/signup">Start Now</Link>
+              <Link href={user ? "/tools" : "/auth/signup"}>Start Now</Link>
             </Button>
           </div>
         </section>

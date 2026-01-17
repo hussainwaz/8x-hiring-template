@@ -123,8 +123,7 @@ function TopUpCard({ plan, user }: { plan: Plan; user: any }) {
           <Button
             className="h-10 w-full rounded-xl bg-white/15 px-6 font-semibold text-white/70 hover:bg-white/20"
             onClick={() => {
-              // TODO: Implement actual purchase logic
-              console.log('Purchase:', plan.name)
+              // Mock purchase - not implemented
             }}
           >
             Purchase Now

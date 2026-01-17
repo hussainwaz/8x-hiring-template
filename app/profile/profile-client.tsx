@@ -1,8 +1,7 @@
 "use client"
 
-import { Navigation } from "@/components/navigation"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { GradientBackground } from "@/components/gradient-background"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,7 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { CreditCard, LogOut, Trash2, Sparkles, Loader2 } from "lucide-react"
+import { CreditCard, LogOut, Trash2, Sparkles, Loader2, User } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
 import { useSubscription } from "@/contexts/subscription-context"
@@ -28,7 +27,7 @@ interface ProfileClientProps {
 }
 
 export function ProfileClient({ user }: ProfileClientProps) {
-  const { isPro, tier, downgradeToFree, refresh } = useSubscription()
+  const { isPro, downgradeToFree } = useSubscription()
   const [isDeleting, setIsDeleting] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [isDowngrading, setIsDowngrading] = useState(false)
@@ -41,8 +40,8 @@ export function ProfileClient({ user }: ProfileClientProps) {
 
     try {
       await fetch("/api/auth/signout", { method: "POST" })
-    } catch (error) {
-      console.error("Logout error:", error)
+    } catch {
+      // Continue with redirect even if request fails
     }
 
     window.location.href = "/"
@@ -63,8 +62,7 @@ export function ProfileClient({ user }: ProfileClientProps) {
 
       setShowDeleteDialog(false)
       window.location.href = "/"
-    } catch (error) {
-      console.error("Delete account error:", error)
+    } catch {
       toast.error("Failed to delete account. Please try again.")
       setIsDeleting(false)
       setShowDeleteDialog(false)
@@ -78,8 +76,7 @@ export function ProfileClient({ user }: ProfileClientProps) {
       await downgradeToFree()
       setShowDowngradeDialog(false)
       toast.success("You've been downgraded to the Free plan.")
-    } catch (error) {
-      console.error("Downgrade error:", error)
+    } catch {
       toast.error("Failed to downgrade. Please try again.")
     } finally {
       setIsDowngrading(false)
@@ -87,41 +84,47 @@ export function ProfileClient({ user }: ProfileClientProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="relative min-h-screen text-white">
+      <GradientBackground />
+
       <div className="container mx-auto px-6 py-12">
         <div className="max-w-2xl mx-auto space-y-8">
           {/* Profile Header */}
-          <div>
-            <h1 className="text-4xl font-bold mb-2">Your Profile</h1>
-            <p className="text-muted-foreground">{user.email}</p>
+          <div className="text-center">
+            {/* Profile Avatar */}
+            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full border-2 border-primary/50 bg-primary/20">
+              <User className="h-12 w-12 text-primary" />
+            </div>
+            <h1 className="text-4xl font-bold mb-2 text-[#c6a02c]">Your Profile</h1>
+            <p className="text-white/60">{user.email}</p>
           </div>
 
           {/* Subscription Management */}
-          <Card className="bg-card border-border/50 p-8">
+          <div className="rounded-2xl border border-white/10 bg-black/35 p-8 shadow-xl backdrop-blur-xl">
             <div className="flex items-center gap-3 mb-6">
-              <CreditCard className="w-5 h-5 text-primary" />
-              <h2 className="text-2xl font-semibold">Subscription</h2>
+              <CreditCard className="w-5 h-5 text-[#ffcc33]" />
+              <h2 className="text-2xl font-semibold text-white">Subscription</h2>
             </div>
 
             {isPro ? (
               <div className="space-y-4">
-                <div className="flex items-center justify-between py-4 border-b border-border/50">
+                <div className="flex items-center justify-between py-4 border-b border-white/10">
                   <div>
-                    <p className="font-medium">Current Plan</p>
-                    <p className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-primary" />
+                    <p className="font-medium text-white">Current Plan</p>
+                    <p className="text-sm text-white/60 mt-1 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-[#ffcc33]" />
                       Pro Plan
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-muted-foreground">Status</p>
-                    <p className="text-sm font-medium text-green-500">Active</p>
+                    <p className="text-sm text-white/60">Status</p>
+                    <p className="text-sm font-medium text-green-400">Active</p>
                   </div>
                 </div>
 
                 <AlertDialog open={showDowngradeDialog} onOpenChange={setShowDowngradeDialog}>
                   <AlertDialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="text-muted-foreground" disabled={isDowngrading}>
+                    <Button variant="outline" size="sm" className="text-white/60 border-white/20 bg-transparent hover:bg-white/5" disabled={isDowngrading}>
                       Downgrade to Free
                     </Button>
                   </AlertDialogTrigger>
@@ -150,27 +153,27 @@ export function ProfileClient({ user }: ProfileClientProps) {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="flex items-center justify-between py-4 border-b border-border/50">
+                <div className="flex items-center justify-between py-4 border-b border-white/10">
                   <div>
-                    <p className="font-medium">Current Plan</p>
-                    <p className="text-sm text-muted-foreground mt-1">Free</p>
+                    <p className="font-medium text-white">Current Plan</p>
+                    <p className="text-sm text-white/60 mt-1">Free</p>
                   </div>
                   <Link href="/upgrade">
-                    <Button variant="outline">Upgrade to Pro</Button>
+                    <Button className="bg-primary hover:bg-primary/90 text-white">Upgrade to Pro</Button>
                   </Link>
                 </div>
               </div>
             )}
-          </Card>
+          </div>
 
           {/* Account Actions */}
-          <Card className="bg-card border-border/50 p-8">
-            <h2 className="text-2xl font-semibold mb-6">Account Actions</h2>
+          <div className="rounded-2xl border border-white/10 bg-black/35 p-8 shadow-xl backdrop-blur-xl">
+            <h2 className="text-2xl font-semibold mb-6 text-white">Account Actions</h2>
 
             <div className="space-y-3">
               <Button
                 variant="outline"
-                className="w-full justify-start text-foreground bg-transparent"
+                className="w-full justify-start text-white border-white/20 bg-transparent hover:bg-white/5"
                 onClick={handleLogout}
                 disabled={isLoggingOut}
               >
@@ -186,7 +189,7 @@ export function ProfileClient({ user }: ProfileClientProps) {
                 <AlertDialogTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 bg-transparent"
+                    className="w-full justify-start text-red-400 border-white/20 hover:text-red-300 hover:bg-red-500/10 bg-transparent"
                     disabled={isDeleting}
                   >
                     <Trash2 className="w-4 h-4 mr-3" />
@@ -224,7 +227,7 @@ export function ProfileClient({ user }: ProfileClientProps) {
                 </AlertDialogContent>
               </AlertDialog>
             </div>
-          </Card>
+          </div>
         </div>
       </div>
     </div>

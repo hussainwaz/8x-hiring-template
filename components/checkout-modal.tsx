@@ -38,7 +38,6 @@ export function CheckoutModal({ isOpen, onClose, onSuccess, planName, price }: C
                 setIsProcessing(false)
             }, 2000)
         } catch (err) {
-            console.error("Checkout error:", err)
             setError(err instanceof Error ? err.message : "Failed to process subscription. Please try again.")
             setIsProcessing(false)
         }
